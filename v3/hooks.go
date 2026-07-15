@@ -5,6 +5,8 @@
 package hooks
 
 import (
+	"net/http"
+
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -48,7 +50,7 @@ func New(config ...Config) fiber.Handler {
 			return err
 		}
 
-		return c.Next()
+		return c.SendStatus(http.StatusCreated)
 	}
 }
 
