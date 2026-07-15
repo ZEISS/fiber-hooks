@@ -4,20 +4,22 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-// DefaultDecoder is a no-op decoder that always returns an empty event and no error.
-func DefaultDecoder(c fiber.Ctx, secret string) (Event, error) {
-	event := Event{}
-	return event, nil
+// NoopEvent is a no-op event that is used when no event is available.
+var NoopEvent = Event{}
+
+type noopDecoder struct{}
+
+// Decode implements the Decoder interface for the noopDecoder.
+func (d *noopDecoder) Decode(c fiber.Ctx, secret string) (Event, error) {
+	return NoopEvent, nil
 }
 
-// DefaultDispatcher is a no-op dispatcher that does nothing.
-func DefaultDispatcher() chan<- Event {
-	ch := make(chan Event)
+type noopDispatcher struct{}
 
-	go func() {
-		for range ch {
-		}
-	}()
+var _ Dispatcher = (*noopDispatcher)(nil)
 
-	return ch
+// Dispatch implements the Dispatcher interface for the noopDispatcher.
+func (d *noopDispatcher) Dispatch(event Event) error {
+	// no-op
+	return nil
 }

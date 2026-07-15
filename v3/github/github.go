@@ -5,8 +5,17 @@ import (
 	hooks "github.com/zeiss/fiber-hooks/v3"
 )
 
+type decoderImpl struct{}
+
+var _ hooks.Decoder = (*decoderImpl)(nil)
+
+// NewDecoder returns a new decoder implementation for the GitHub API.
+func NewDecoder() hooks.Decoder {
+	return &decoderImpl{}
+}
+
 // Decoder verifies the payload from the request using the GitHub API.
-func Decoder(c fiber.Ctx, secret string) (hooks.Event, error) {
+func (d *decoderImpl) Decode(c fiber.Ctx, secret string) (hooks.Event, error) {
 	event := hooks.Event{}
 
 	b, err := ValidatePayload(c, []byte(secret))

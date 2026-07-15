@@ -58,7 +58,7 @@ func run(_ context.Context) error {
 
 	hook := hooks.New(hooks.Config{
 		SigningSecret: cfg.Flags.Secret,
-		Decoder:       github.Decoder,
+		Decoder:       github.NewDecoder(),
 	})
 
 	app.Post("/webhooks", hook)

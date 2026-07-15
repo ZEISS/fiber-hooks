@@ -18,11 +18,16 @@ type Event struct {
 	Payload []byte `json:"payload"`
 }
 
-// Decoder is the function to decode the event payload.
-type Decoder func(c fiber.Ctx, secret string) (Event, error)
+// Decoder is an interface that defines the decode method for the event.
+type Decoder interface {
+	Decode(c fiber.Ctx, secret string) (Event, error)
+}
 
-// Dispatcher is the function to dispatch the event to the registered handlers.
-type Dispatcher func() chan<- Event
+// Dispatcher is an interface that defines the dispatch method for the event.
+type Dispatcher interface {
+	// Dispatch dispatches the event to the registered handlers.
+	Dispatch(event Event) error
+}
 
 // New creates a new handler to manage the session.
 func New(config ...Config) fiber.Handler {
@@ -33,15 +38,15 @@ func New(config ...Config) fiber.Handler {
 			return c.Next()
 		}
 
-		chn := cfg.Dispatcher()
-		defer close(chn)
-
-		event, err := cfg.Decoder(c, cfg.SigningSecret)
+		event, err := cfg.Decoder.Decode(c, cfg.SigningSecret)
 		if err != nil {
 			return err
 		}
 
-		chn <- event
+		err = cfg.Dispatcher.Dispatch(event)
+		if err != nil {
+			return err
+		}
 
 		return c.Next()
 	}
@@ -61,8 +66,8 @@ type Config struct {
 
 // ConfigDefault is the default config.
 var ConfigDefault = Config{
-	Decoder:    DefaultDecoder,
-	Dispatcher: DefaultDispatcher,
+	Decoder:    &noopDecoder{},
+	Dispatcher: &noopDispatcher{},
 }
 
 func configDefault(config ...Config) Config {
